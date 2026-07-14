@@ -1,0 +1,409 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Teletext page object",
+  "description": "A teletext page and subpages",
+  "$id": "https://teletext-formats.github.io/teletext-page-object/schema/1-0-0/teletext-page-object.json",
+  "type": "object",
+  "properties": {
+    "number": {
+      "$ref": "#/$defs/pageNumber",
+      "not": {
+        "type": "string",
+        "pattern": "^([1-8][fF]{2})$"
+      }
+    },
+    "control": {
+      "$ref": "#/$defs/control"
+    },
+    "inherit": {
+      "$ref": "#/$defs/inherit"
+    },
+    "packets": {
+      "$ref": "#/$defs/packets"
+    },
+    "subpages": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/subpage"
+      }
+    },
+    "metadata": {
+      "$ref": "#/$defs/metadata"
+    }
+  },
+  "required": [
+    "subpages"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "control": {
+      "type": "object",
+      "title": "Teletext page control bits",
+      "properties": {
+        "erasePage": {
+          "type": "boolean"
+        },
+        "newsflash": {
+          "type": "boolean"
+        },
+        "subtitle": {
+          "type": "boolean"
+        },
+        "suppressHeader": {
+          "type": "boolean"
+        },
+        "update": {
+          "type": "boolean"
+        },
+        "interruptedSequence": {
+          "type": "boolean"
+        },
+        "suppressPage": {
+          "type": "boolean"
+        },
+        "language": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 7,
+          "description": "National Option Character Set number"
+        }
+      },
+      "additionalProperties": false
+    },
+    "inherit": {
+      "title": "Inherit packets flag",
+      "description": "Inherit packet data from the parent object",
+      "type": "boolean",
+      "default": true
+    },
+    "packets": {
+      "description": "Array of packet objects",
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/packet"
+      }
+    },
+    "subpage": {
+      "title": "Teletext subpage object",
+      "type": "object",
+      "properties": {
+        "subcode": {
+          "$ref": "#/$defs/pageSubcode",
+          "not": {
+            "type": "string",
+            "pattern": "^(3[fF]7[fF])$"
+          }
+        },
+        "control": {
+          "$ref": "#/$defs/control"
+        },
+        "inherit": {
+          "$ref": "#/$defs/inherit"
+        },
+        "packets": {
+          "$ref": "#/$defs/packets"
+        }
+      },
+      "additionalProperties": false
+    },
+    "pageNumber": {
+      "description": "A three digit magazine and page number expressed as a hexadecimal string",
+      "type": "string",
+      "pattern": "^([1-8]([a-fA-F0-9]{2}))$"
+    },
+    "pageSubcode": {
+      "description": "A four digit subpage number expressed as a hexadecimal string",
+      "type": "string",
+      "pattern": "^([0-3]([a-fA-F0-9])[0-7]([a-fA-F0-9]))$"
+    },
+    "packet": {
+      "description": "Teletext packet object",
+      "type": "object",
+      "properties": {
+        "number": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 28
+        },
+        "dc": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 15
+        },
+        "number": true,
+        "dc": true,
+        "text": true,
+        "base64": true,
+        "triplets": true,
+        "hamming": true,
+        "linking": true
+      },
+      "required": [
+        "number"
+      ],
+      "$ref": "#/$defs/packetTypes",
+      "additionalProperties": false
+    },
+    "packetTypes": {
+      "type": "object",
+      "oneOf": [
+        {
+          "properties": {
+            "number": {
+              "type": "integer",
+              "maximum": 25
+            },
+            "dc": false,
+            "text": {
+              "description": "7-bit text data",
+              "type": "string",
+              "maxLength": 40,
+              "pattern": "^[\u0000-]*$"
+            },
+            "base64": false,
+            "triplets": false,
+            "hamming": false,
+            "linking": false
+          }
+        },
+        {
+          "properties": {
+            "number": {
+                "type": "integer",
+                "minimum": 1
+            },
+            "dc": false,
+            "base64": {
+              "description": "Raw binary data",
+              "type": "string",
+              "contentEncoding": "base64",
+              "minLength": 56,
+              "maxLength": 56
+            },
+            "text": false,
+            "triplets": false,
+            "hamming": false,
+            "linking": false
+          }
+        },
+        {
+          "properties": {
+            "number": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 28,
+              "not": {"const": 27}
+            },
+            "triplets": {
+              "$ref": "#/$defs/triplets"
+            },
+            "text": false,
+            "base64": false,
+            "hamming": false,
+            "linking": false
+          },
+          "required": [
+            "dc"
+          ]
+        },
+        {
+          "properties": {
+            "number": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 25
+            },
+            "dc": false,
+            "hamming": {
+              "description": "Hamming 8/4 data",
+              "type": "array",
+              "minItems": 40,
+              "maxItems": 40,
+              "items": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 15
+              }
+            },
+            "text": false,
+            "base64": false,
+            "triplets": false,
+            "linking": false
+          }
+        },
+        {
+          "properties": {
+            "number": {
+              "type": "integer",
+              "const": 27
+            },
+            "text": false,
+            "base64": false,
+            "hamming": false
+          },
+          "oneOf": [
+            {
+              "properties": {
+                "dc": {
+                  "type": "integer",
+                  "maximum": 0
+                },
+                "triplets": false,
+                "linking": {
+                  "$ref": "#/$defs/linking"
+                }
+              }
+            },
+            {
+              "properties": {
+                "dc": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 3
+                },
+                "linking": {
+                  "$ref": "#/$defs/linking",
+                  "type": "object",
+                  "properties": {
+                    "linkControl": false
+                  }
+                },
+                "triplets": false
+              }
+            },
+            {
+              "properties": {
+                "dc": {
+                  "type": "integer",
+                  "minimum": 4,
+                  "maximum": 5
+                },
+                "triplets": {
+                  "$ref": "#/$defs/triplets"
+                },
+                "linking": false
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "triplets": {
+      "description": "Hamming 24/18 Enhancement data",
+      "type": "array",
+      "minItems": 13,
+      "maxItems": 13,
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 262143
+      }
+    },
+    "linking": {
+      "description": "Navigation link data",
+      "type": "object",
+      "properties": {
+        "links": {
+          "type": "array",
+          "minItems": 6,
+          "maxItems": 6,
+          "items": {
+            "type": "object",
+            "properties": {
+              "page": {
+                "$ref": "#/$defs/pageNumber"
+              },
+              "subcode": {
+                "$ref": "#/$defs/pageSubcode"
+              }
+            },
+            "additionalProperties": false,
+            "oneOf": [
+              {
+                "properties": {
+                  "subcode": false
+                }
+              },
+              {
+                "anyOf": [
+                  {
+                    "properties": {
+                      "page": {
+                        "not": {
+                          "type": "string",
+                          "pattern": "^([1-8]([fF]{2}))$"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "properties": {
+                      "subcode": {
+                        "type": "string",
+                        "pattern": "^(3([fF]7[fF]))$"
+                      }
+                    }
+                  }
+                ],
+                "required": [
+                  "page",
+                  "subcode"
+                ]
+              }
+            ]
+          }
+        },
+        "linkControl": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 15
+        }
+      },
+      "required": [
+        "links"
+      ],
+      "additionalProperties": false
+    },
+    "metadata": {
+      "title": "Page metadata object",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "author": {
+          "type": "string"
+        },
+        "comment": {
+          "type": "string"
+        },
+        "created": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "validFrom": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "validUntil": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "cycleSeconds": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "cycleCycles": {
+          "type": "integer",
+          "minimum": 1
+        }
+	  },
+      "anyOf":[
+        { "not": {"required":["cycleSeconds"]}},
+        { "not": {"required":["cycleCycles"]}}
+      ],
+      "additionalProperties": false
+    }
+  }
+}
